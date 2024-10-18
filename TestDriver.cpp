@@ -84,11 +84,15 @@ int read_word(string word, int cur_state, vector<Edge> delta)
     // Otherwise, if transition is defined, the next state becomes our current state
     cur_state = next_state; 
 
+
+
     // In the process of transitioning, the first letter in the word also gets consumed,
     //  and the word we are reading becomes a substring of itself. We can make this change
     //  by reading the word at its second letter instead of its first.
 
     word = word.substr(1, word.size() - 1);
+
+
 
 
     // General Case: Read the sub-word, get its halting state
@@ -109,11 +113,10 @@ int read_word(string word, int cur_state, vector<Edge> delta)
 // Passes a word to a DFA and then returns the halting state
 //  Note this function outputs to cout (prints sequence)
 
-int read_word_verbose(string word, int cur_state, vector<Edge> delta)
+int read_word(string word, int cur_state, vector<Edge> delta, vector<int> &state_sequence, vector<char> &word_sequence)
 {
 
     // Base Case 1: If word is empty, return current state
-    
     if (word.empty() == true)
     {
         return cur_state;
@@ -137,32 +140,34 @@ int read_word_verbose(string word, int cur_state, vector<Edge> delta)
 
     // Otherwise, if transition is defined, the next state becomes our current state
     cur_state = next_state; 
-
-    // Print this sequence
-    cout << "\t-->\tq" << cur_state;
-
+    state_sequence.push_back( next_state );
 
     // In the process of transitioning, the first letter in the word also gets consumed,
     //  and the word we are reading becomes a substring of itself. We can make this change
     //  by reading the word at its second letter instead of its first.
 
+    word_sequence.push_back( word.front() );
     word = word.substr(1, word.size() - 1);
 
 
     // General Case: Read the sub-word, get its halting state
-    return read_word_verbose(word, cur_state, delta);
+    return read_word(word, cur_state, delta, state_sequence, word_sequence);
 }
 
 
 
+
+
+
+
+// d: Q x E ---> Q
 
 void print_rules(vector<Edge> delta)
 {
     // Iterate through transition rule list
     for (Edge e: delta)
     {
-
-
+        cout << "d( q" << e.current_state << ", " << e.letter << " )   --->   q" << e.next_state << endl; 
     }
 }
 
@@ -179,12 +184,17 @@ int main()
 {
     // Create transition function/rules
     vector<Edge> delta_function = vector<Edge>();
-
-    delta_function.push_back( Edge(1, '1', 1) );
     delta_function.push_back( Edge(1, '0', 2) );
-    delta_function.push_back( Edge(2, '1', 2) );
+    delta_function.push_back( Edge(1, '1', 1) );
     delta_function.push_back( Edge(2, '0', 1) );
+    delta_function.push_back( Edge(2, '1', 2) );
 
+    
+
+    // Print the rules
+    cout << endl;
+    print_rules(delta_function);
+    cout << endl;
 
     // Create a word or two to read
     vector<string> words = vector<string>();
@@ -196,10 +206,38 @@ int main()
     // print info to user and process each word:
     for(string s: words)
     {
-        cout << endl << "Current Word: " << s << endl;
-        cout << "Sequence:\tq1";
-        read_word_verbose(s, 1, delta_function);
+
+        vector<int> state_sequence = vector<int>();
+        vector<char> letter_sequence = vector<char>();
+
+        cout << endl << "Current Word: " << s << endl;                      // Print word
+        state_sequence.push_back(1);                                        // add starting state
+        read_word(s, 1, delta_function, state_sequence, letter_sequence);   // Read word, get necessary data
+
+        cout << "Sequence:\t";
+
+        for (int i = 0; i < state_sequence.size(); i++)         // Print state sequence
+        {
+            cout << "q" << state_sequence[i];
+            
+            if (i < state_sequence.size() - 1)                  // if more states follow (not at end)
+            {
+                cout << "\t-->\t";                              // Add arrow as a delimiter
+            }
+        }
+
+
+        cout << endl << "\t\t\t";                                // Print letter sequence under the transitions
+        
+        for (char c: letter_sequence)
+        {
+            cout << c << "\t\t";
+        }
+
+        
+        
         cout << endl << endl;
+
     }
 
 
